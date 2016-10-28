@@ -1,6 +1,0 @@
-
-        [ckan.plugins]
-        handle=ckanext.handle.plugin:HandlePlugin
-	[babel.extractors]
-	ckan = ckan.lib.extract:extract_ckan
-    
