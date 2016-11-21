@@ -1,8 +1,11 @@
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
+import ckan.lib.helpers as h
+
 from logging import getLogger
 
 from ckanext.handle.lib import HandleService
+from ckanext.handle.validation import handle_pid_validator
 
 config = {}
 
@@ -17,18 +20,20 @@ class ConfigError(Exception):
 class HandlePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IConfigurable)
-    #plugins.implements(plugins.IPackageController, inherit=True)
+    plugins.implements(plugins.IValidators, inherit=True)
     plugins.implements(plugins.IResourceController, inherit=True)
+    plugins.implements(plugins.IPackageController, inherit=True)
 
-    # IConfigurer
+    ## IConfigurer -----------------------------------------------------------------------
     def update_config(self, config_):
         toolkit.add_template_directory(config_, 'templates')
         toolkit.add_public_directory(config_, 'public')
         toolkit.add_resource('fanstatic', 'handle')
 
+
+    ## IConfigurable ---------------------------------------------------------------------
     def configure(self, main_config):
         """Implementation of IConfigurable.configure"""
-        # From ckanext-ldap https://github.com/NaturalHistoryMuseum/ckanext-ldap
         # Our own config schema, defines required items, default values and transform functions
         schema = {
             'ckanext.handle.handle_server_url': {'required': True},
@@ -70,83 +75,68 @@ class HandlePlugin(plugins.SingletonPlugin):
         if len(errors):
             raise ConfigError("\n".join(errors))
 
-
-    ## IPackageController
-    # def after_create(self, context, pkg_dict):
-    #     """
-    #     A new dataset has been created, so we need to create a new HANDLE PID
-    #     NB: This is called after creation of a dataset, and before resources have been added so state = draft
-    #     @param context:
-    #     @param pkg_dict:
-    #     @return:
-    #     """
-    #     data_dict = toolkit.get_action('package_show')(context, pkg_dict)
-    #     log.debug(pprint.pprint(pkg_dict))
+    ## IValidators
+    def get_validators(self):
+       return {'valid_handle_pid': handle_pid_validator}
 
 
-    # def after_update(self, context, pkg_dict):
-    #     """
-    #     Dataset has been created / updated
-    #     Check status of the dataset to determine if we should publish DOI to datacite network
-
-    #     @param pkg_dict:
-    #     @return: pkg_dict
-    #     """
-    #     log.debug(pprint.pprint(pkg_dict))
-
-    #     # Is this active and public? If so we need to make sure we have an active DOI
-    #     if pkg_dict.get('state', 'active') == 'active' and not pkg_dict.get('private', False):
-    #         package_id = pkg_dict['id']
-
-    #         # Load the original package, so we can determine if user has changed any fields
-    #         orig_pkg_dict = toolkit.get_action('package_show')(context, {'id': package_id})
-
-    #         # If we don't have a DOI, create one
-    #         # This could happen if the DOI module is enabled after a dataset has been creates
-    #         package_pid = orig_pkg_dict['package_pid']
-
-    #         if not package_pid:
-    #             hdl = HandleService()
-    #             orig_pkg_dict['package_pid'] = hdl.create_handle_identifier(package_id)
-
-    #             toolkit.get_action('package_update')(context, orig_pkg_dict)
-    #         # Is this an existing DOI? Update it
-    #         # if doi.published:
-
-    #         #     # Before updating, check if any of the metadata has been changed - otherwise
-    #         #     # We end up sending loads of revisions to DataCite for minor edits
-    #         #     # Load the current version
-    #         #     orig_metadata_dict = build_metadata(orig_pkg_dict, doi)
-    #         #     # Check if the two dictionaries are the same
-    #         #     if cmp(orig_metadata_dict, metadata_dict) != 0:
-    #         #         # Not the same, so we want to update the metadata
-    #         #         update_doi(package_id, **metadata_dict)
-    #         #         h.flash_success('DataCite DOI metadata updated')
-
-    #         #     # TODO: If editing a dataset older than 5 days, create DOI revision
-
-    #         # # New DOI - publish to datacite
-    #         # else:
-    #         #     h.flash_success('DataCite DOI created')
-    #         #     publish_doi(package_id, **metadata_dict)
-
-    #     return pkg_dict
+    ## IResourceController ---------------------------------------------------------------
+    def after_create(self, context, data_dict):
+        # pkg_id = data_dict.get('package_id') pkg_dict =
+        # toolkit.get_action('package_show')(context, {'id': pkg_id})
+        # toolkit.get_action('package_update')(context, pkg_dict)
+        # Unfortunatelly necessary for handle creation, because Resource ID is
+        # not present during the creation process
+        log.debug(pprint.pprint(data_dict))
+        if 'type' not in data_dict:
+            toolkit.get_action('resource_update')(context, data_dict)
 
 
-    def after_create(self, context, res_dict):
-        log.debug(pprint.pprint(res_dict))
+    ## IPackageController ----------------------------------------------------------------
+    def after_update(self, context, data_dict):
+        """
+        Dataset has been created / updated
+        Check status of the dataset to determine if we should publish HANDLE
+        PIDS to datacite network
+        @param pkg_dict:
+        @return: pkg_dict
+        """
+        log.debug("After update ------------------------- Beginn")
+        #log.debug(pprint.pprint(data_dict))
+        if 'type' in data_dict and data_dict.get('type', None) == 'dataset':
+            pkg_id = data_dict['id']
+            # Load the original package, so we can determine if user has changed any fields
+            orig_data_dict = toolkit.get_action('package_show')(context, {'id': pkg_id})
+            resources = orig_data_dict['resources']
+            hdl = HandleService()
 
-        # Is this active and public? If so we need to make sure we have an active DOI
-        # if res_dict.get('state', 'active') == 'active' and not res_dict.get('private', False):
-        #     res_id = res_dict['id']
+            # Is this active and public? If so we need to make sure we have an active DOI
+            if orig_data_dict.get('state', 'active') == 'active' and not orig_data_dict.get('private', False):
+                for res in resources:
+                    #res = toolkit.get_action('resource_update')(context, res)
+                    res_pid = res.pop(hdl.resource_field, None)
 
-        #     # Load the original package, so we can determine if user has changed any fields
-        #     orig_res_dict = toolkit.get_action('package_show')(context, {'id': res_id})
+                    # Is there no res_pid -> Create new res_pid
+                    # FIXME should never occour anymore, see validation
+                    if not res_pid:
+                        res_pid = hdl.create_hdl_url(res['id'][:8])
+                        #toolkit.get_action('resource_update')(context,orig_res)
 
-        #     # If we don't have a DOI, create one
-        #     # This could happen if the DOI module is enabled after a dataset has been creates
-        #     package_pid = res_dict['package_pid']
+                    # If we don't have a registered handle, register res_pid
+                    if not hdl.hdl_exists_from_url(res_pid):
+                        res_link = h.url_for_static_or_external(controller='package',
+                                                                action='resource_read',
+                                                                id=pkg_id,
+                                                                resource_id=res['id'],
+                                                                qualified = True)
+                        #hdl.register_hdl_url(res_pid, res_link)
+                        log.debug('Register:' + res_link)
 
-        #     if not package_pid:
-        #         hdl = HandleService()
-        #         res_dict['package_pid'] = hdl.create_handle_identifier(res_id)
+            elif orig_data_dict.get('state', 'active') == 'active' and orig_data_dict.get('private', False):
+                # Not active or private Dataset (delete the handle PID) if it
+                # exists
+                for res in resources:
+                    log.debug('Delete:' + res[hdl.resource_field])
+                # if hdl.hdl_exists_from_url(res_pid):
+                #     hdl.delete_hdl_url(res_pid)
+
