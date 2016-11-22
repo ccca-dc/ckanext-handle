@@ -80,6 +80,8 @@ setup(
     entry_points='''
         [ckan.plugins]
         handle=ckanext.handle.plugin:HandlePlugin
+        [paste.paster_command]
+        handle=ckanext.handle.commands.handle:HANDLECommand
 	[babel.extractors]
 	ckan = ckan.lib.extract:extract_ckan
     ''',

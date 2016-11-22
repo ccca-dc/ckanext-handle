@@ -1,0 +1,6 @@
+{% extends "dataviewer/base.html" %}
+
+{% block page %}
+<h4> Cite this resource: </h4>
+<p>{{ author_name }}. ({{ h.render_datetime(publication_year) }}). {{ res_name }} (Ver. {{ ver_number }}). CCCA Data Centre: <a href="{{ res_pid }}">{{ res_pid }}</a>. {{ h.render_datetime(access_date) }} </p>
+{% endblock %}

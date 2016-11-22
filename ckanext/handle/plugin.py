@@ -6,6 +6,8 @@ from logging import getLogger
 
 from ckanext.handle.lib import HandleService
 from ckanext.handle.validation import handle_pid_validator
+import ckanext.handle.commands.handle as handle_action
+import datetime
 
 config = {}
 
@@ -21,6 +23,7 @@ class HandlePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IConfigurable)
     plugins.implements(plugins.IValidators, inherit=True)
+    plugins.implements(plugins.IResourceView, inherit=True)
     plugins.implements(plugins.IResourceController, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
 
@@ -75,9 +78,50 @@ class HandlePlugin(plugins.SingletonPlugin):
         if len(errors):
             raise ConfigError("\n".join(errors))
 
+
     ## IValidators
     def get_validators(self):
        return {'valid_handle_pid': handle_pid_validator}
+
+    ## IResourceView
+    def info(self):
+        return {'name': 'citation_view',
+                'title': plugins.toolkit._('Citation'),
+                'icon': 'pencil',
+                'iframed': True,
+                'requires_datastore': False,
+                'default_title': plugins.toolkit._('Citation')
+                }
+
+    def can_view(self, data_dict):
+        # Returning True says a that any resource can use this view type.
+        # It will appear in every resource view dropdown.
+        return True
+
+    def view_template(self, context, data_dict):
+        return 'citation_view.html'
+
+    def setup_template_variables(self, context, data_dict):
+        """Setup variables available to templates"""
+        log.debug(pprint.pprint(data_dict))
+
+        author_name = data_dict['package'].get('author', '')
+        publication_year = data_dict['package'].get('pubDate', '')
+        res_name = data_dict['resource'].get('name', '')
+        ver_number = data_dict['resource'].get('formatVer', '1')
+        res_pid = data_dict['resource'].get('ResourceURI', '')
+        access_date =  datetime.datetime.now()
+
+        tpl_variables = {
+            'author_name': author_name,
+            'publication_year': publication_year,
+            'res_name': res_name,
+            'ver_number': ver_number,
+            'res_pid': res_pid,
+            'access_date': access_date
+        }
+
+        return tpl_variables
 
 
     ## IResourceController ---------------------------------------------------------------
@@ -100,8 +144,6 @@ class HandlePlugin(plugins.SingletonPlugin):
         @param pkg_dict:
         @return: pkg_dict
         """
-        log.debug("After update ------------------------- Beginn")
-        #log.debug(pprint.pprint(data_dict))
         if 'type' in data_dict and data_dict.get('type', None) == 'dataset':
             pkg_id = data_dict['id']
             # Load the original package, so we can determine if user has changed any fields
@@ -138,4 +180,3 @@ class HandlePlugin(plugins.SingletonPlugin):
                     log.debug('Delete:' + res[hdl.resource_field])
                 # if hdl.hdl_exists_from_url(res_pid):
                 #     hdl.delete_hdl_url(res_pid)
-
