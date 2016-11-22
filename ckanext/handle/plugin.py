@@ -87,7 +87,6 @@ class HandlePlugin(plugins.SingletonPlugin):
         # toolkit.get_action('package_update')(context, pkg_dict)
         # Unfortunatelly necessary for handle creation, because Resource ID is
         # not present during the creation process
-        log.debug(pprint.pprint(data_dict))
         if 'type' not in data_dict:
             toolkit.get_action('resource_update')(context, data_dict)
 
@@ -117,7 +116,7 @@ class HandlePlugin(plugins.SingletonPlugin):
                     res_pid = res.pop(hdl.resource_field, None)
 
                     # Is there no res_pid -> Create new res_pid
-                    # FIXME should never occour anymore, see validation
+                    # Needed, because validator does not have Resource UUID at first run
                     if not res_pid:
                         res_pid = hdl.create_hdl_url(res['id'][:8])
                         #toolkit.get_action('resource_update')(context,orig_res)
