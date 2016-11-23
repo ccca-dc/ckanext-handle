@@ -105,7 +105,7 @@ class HandlePlugin(plugins.SingletonPlugin):
         """Setup variables available to templates"""
         log.debug(pprint.pprint(data_dict))
 
-        author_name = data_dict['package'].get('author', '')
+        author_name = data_dict['package'].get('author', 'Author name')
         publication_year = h.date_str_to_datetime(data_dict['package'].get('pubDate', '')).year
         res_name = data_dict['resource'].get('name', '')
         ver_number = data_dict['resource'].get('formatVer', '1')
@@ -170,13 +170,13 @@ class HandlePlugin(plugins.SingletonPlugin):
                                                                 id=pkg_id,
                                                                 resource_id=res['id'],
                                                                 qualified = True)
-                        #hdl.register_hdl_url(res_pid, res_link)
-                        log.debug('Register:' + res_link)
+                        hdl.register_hdl_url(res_pid, res_link)
+                        #log.debug('Register:' + res_link)
 
             elif orig_data_dict.get('state', 'active') == 'active' and orig_data_dict.get('private', False):
                 # Not active or private Dataset (delete the handle PID) if it
                 # exists
                 for res in resources:
-                    log.debug('Delete:' + res[hdl.resource_field])
-                # if hdl.hdl_exists_from_url(res_pid):
-                #     hdl.delete_hdl_url(res_pid)
+                    #log.debug('Delete:' + res[hdl.resource_field])
+                    if hdl.hdl_exists_from_url(res_pid):
+                        hdl.delete_hdl_url(res_pid)
