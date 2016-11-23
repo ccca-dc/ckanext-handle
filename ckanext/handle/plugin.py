@@ -106,7 +106,7 @@ class HandlePlugin(plugins.SingletonPlugin):
         log.debug(pprint.pprint(data_dict))
 
         author_name = data_dict['package'].get('author', '')
-        publication_year = data_dict['package'].get('pubDate', '')
+        publication_year = h.date_str_to_datetime(data_dict['package'].get('pubDate', '')).year
         res_name = data_dict['resource'].get('name', '')
         ver_number = data_dict['resource'].get('formatVer', '1')
         res_pid = data_dict['resource'].get('ResourceURI', '')
