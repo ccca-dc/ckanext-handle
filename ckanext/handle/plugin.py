@@ -105,8 +105,14 @@ class HandlePlugin(plugins.SingletonPlugin):
         """Setup variables available to templates"""
         log.debug(pprint.pprint(data_dict))
 
-        author_name = data_dict['package'].get('author', 'Author name')
-        publication_year = h.date_str_to_datetime(data_dict['package'].get('pubDate', '')).year
+        author_name = data_dict['package'].get('author', '')
+	if not author_name:
+            author_name = 'Author name'
+        publication_year = data_dict['package'].get('pubDate', '')
+	if not publication_year:
+            publication_year = "Publication year"
+        else:
+            publication_year = h.date_str_to_datetime(publication_year).year
         res_name = data_dict['resource'].get('name', '')
         ver_number = data_dict['resource'].get('formatVer', '1')
         res_pid = data_dict['resource'].get('ResourceURI', '')
@@ -178,5 +184,6 @@ class HandlePlugin(plugins.SingletonPlugin):
                 # exists
                 for res in resources:
                     #log.debug('Delete:' + res[hdl.resource_field])
+                    res_pid = res[hdl.resource_field]
                     if hdl.hdl_exists_from_url(res_pid):
                         hdl.delete_hdl_url(res_pid)
