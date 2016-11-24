@@ -103,7 +103,7 @@ class HandlePlugin(plugins.SingletonPlugin):
 
     def setup_template_variables(self, context, data_dict):
         """Setup variables available to templates"""
-        log.debug(pprint.pprint(data_dict))
+        #log.debug(pprint.pprint(data_dict))
 
         author_name = data_dict['package'].get('author', '')
 	if not author_name:
@@ -183,7 +183,12 @@ class HandlePlugin(plugins.SingletonPlugin):
                 # Not active or private Dataset (delete the handle PID) if it
                 # exists
                 for res in resources:
+                    res_pid = res.pop(hdl.resource_field, None)
+
+                    # Is there no res_pid -> Create new res_pid
+                    # Needed, because validator does not have Resource UUID at first run
+                    if not res_pid:
+	                res_pid = hdl.create_hdl_url(res['id'][:8])
                     #log.debug('Delete:' + res[hdl.resource_field])
-                    res_pid = res[hdl.resource_field]
                     if hdl.hdl_exists_from_url(res_pid):
                         hdl.delete_hdl_url(res_pid)
