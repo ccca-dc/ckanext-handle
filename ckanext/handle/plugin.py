@@ -88,7 +88,7 @@ class HandlePlugin(plugins.SingletonPlugin):
         return {'name': 'citation_view',
                 'title': plugins.toolkit._('Citation'),
                 'icon': 'pencil',
-                'iframed': True,
+                'iframed': False,
                 'requires_datastore': False,
                 'default_title': plugins.toolkit._('Citation')
                 }
@@ -105,7 +105,7 @@ class HandlePlugin(plugins.SingletonPlugin):
         """Setup variables available to templates"""
         #log.debug(pprint.pprint(data_dict))
 
-        author_name = data_dict['package'].get('author', '')
+        author_name = data_dict['package'].get('author_citation', '')
 	if not author_name:
             author_name = 'Author name'
         publication_year = data_dict['package'].get('pubDate', '')
