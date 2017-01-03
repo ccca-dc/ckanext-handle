@@ -44,7 +44,8 @@ class HandlePlugin(plugins.SingletonPlugin):
             'ckanext.handle.certificate_only': {'required': True},
             'ckanext.handle.prefix': {'required': True},
             'ckanext.handle.package_field': {'required': True},
-            'ckanext.handle.resource_field': {'required': True}
+            'ckanext.handle.resource_field': {'required': True},
+            'ckanext.handle.development': {'default': False, 'parse': plugins.toolkit.asbool}
         }
 
         errors = []
@@ -170,14 +171,16 @@ class HandlePlugin(plugins.SingletonPlugin):
                         #toolkit.get_action('resource_update')(context,orig_res)
 
                     # If we don't have a registered handle, register res_pid
-                    if not hdl.hdl_exists_from_url(res_pid):
-                        res_link = h.url_for_static_or_external(controller='package',
-                                                                action='resource_read',
-                                                                id=pkg_id,
-                                                                resource_id=res['id'],
-                                                                qualified = True)
-                        hdl.register_hdl_url(res_pid, res_link)
-                        #log.debug('Register:' + res_link)
+                    if not hdl.development:
+                        if not hdl.hdl_exists_from_url(res_pid):
+                            res_link = h.url_for_static_or_external(controller='package',
+                                                                    action='resource_read',
+                                                                    id=pkg_id,
+                                                                    resource_id=res['id'],
+                                                                    qualified = True)
+                            hdl.register_hdl_url(res_pid, res_link)
+                    else:
+                        log.debug('Register:' + res_link)
 
             elif orig_data_dict.get('state', 'active') == 'active' and orig_data_dict.get('private', False):
                 # Not active or private Dataset (delete the handle PID) if it
@@ -190,5 +193,8 @@ class HandlePlugin(plugins.SingletonPlugin):
                     if not res_pid:
 	                res_pid = hdl.create_hdl_url(res['id'][:8])
                     #log.debug('Delete:' + res[hdl.resource_field])
-                    if hdl.hdl_exists_from_url(res_pid):
-                        hdl.delete_hdl_url(res_pid)
+                    if not hdl.development:
+                        if hdl.hdl_exists_from_url(res_pid):
+                            hdl.delete_hdl_url(res_pid)
+                    else:
+                        log.debug('Delete:' + res[hdl.resource_field])

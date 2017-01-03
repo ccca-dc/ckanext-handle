@@ -12,20 +12,22 @@ log = logging.getLogger(__name__)
 class HandleService:
     def __init__(self):
         # Load config parameters for ckanext-handle
-        self.handle_server_url = config.get("ckanext.handle.handle_server_url")
-        self.private_key = config.get("ckanext.handle.private_key")
-        self.certificate_only = config.get("ckanext.handle.certificate_only")
-        self.prefix = config.get("ckanext.handle.prefix")
-        self.proxy = config.get("ckanext.handle.proxy")
-        self.resource_field = config.get("ckanext.handle.resource_field")
-        self.package_field = config.get("ckanext.handle.package_field")
+        self.development = config.get("ckanext.handle.development")
+        if not self.development:
+            self.handle_server_url = config.get("ckanext.handle.handle_server_url")
+            self.private_key = config.get("ckanext.handle.private_key")
+            self.certificate_only = config.get("ckanext.handle.certificate_only")
+            self.prefix = config.get("ckanext.handle.prefix")
+            self.proxy = config.get("ckanext.handle.proxy")
+            self.resource_field = config.get("ckanext.handle.resource_field")
+            self.package_field = config.get("ckanext.handle.package_field")
 
-        # Create credentials and client for handle interaction
-        self.cred = PIDClientCredentials(
-            handle_server_url=self.handle_server_url,
-            private_key=self.private_key,
-            certificate_only=self.certificate_only)
-        self.client = EUDATHandleClient.instantiate_with_credentials(self.cred)
+            # Create credentials and client for handle interaction
+            self.cred = PIDClientCredentials(
+                handle_server_url=self.handle_server_url,
+                private_key=self.private_key,
+                certificate_only=self.certificate_only)
+            self.client = EUDATHandleClient.instantiate_with_credentials(self.cred)
 
 
     def create_hdl_url(self, hdl_id):
