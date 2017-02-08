@@ -38,6 +38,8 @@ class HANDLECommand(CkanCommand):
 
         if cmd == 'create-pid':
             self.create_pid()
+        if cmd == 'clean-handle-server':
+            self.clean_handle_server()
         else:
             print 'Command %s not recognized' % cmd
 
@@ -51,4 +53,13 @@ class HANDLECommand(CkanCommand):
                 toolkit.get_action('package_update')(self.context, pkg_dict)
         except logic.NotFound:
             print "Error"
-            # toolkit.get_action('organization_create')(self.context, {'id': organization_id, 'name': organization_id})
+
+    def clean_handle_server(self):
+        try:
+            pkg_list = toolkit.get_action('package_list')(self.context, {})
+            pprint.pprint(pkg_list)
+            for name in pkg_list:
+                pkg_dict = toolkit.get_action('package_show')(self.context, {'id':name})
+                pprint.pprint(pkg_dict)
+        except logic.NotFound:
+            print "Error"

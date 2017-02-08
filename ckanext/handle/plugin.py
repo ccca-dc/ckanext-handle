@@ -105,6 +105,7 @@ class HandlePlugin(plugins.SingletonPlugin):
     def setup_template_variables(self, context, data_dict):
         """Setup variables available to templates"""
         #log.debug(pprint.pprint(data_dict))
+        hdl = HandleService()
 
         author_name = data_dict['package'].get('author_citation', '')
 	if not author_name:
@@ -116,7 +117,7 @@ class HandlePlugin(plugins.SingletonPlugin):
             publication_year = h.date_str_to_datetime(publication_year).year
         res_name = data_dict['resource'].get('name', '')
         ver_number = data_dict['resource'].get('formatVer', '1')
-        res_pid = data_dict['resource'].get('ResourceURI', '')
+        res_pid = data_dict['resource'].get(hdl.resource_field, '')
         access_date =  datetime.datetime.now()
 
         tpl_variables = {
@@ -180,6 +181,11 @@ class HandlePlugin(plugins.SingletonPlugin):
                                                                     qualified = True)
                             hdl.register_hdl_url(res_pid, res_link)
                     else:
+                        res_link = h.url_for_static_or_external(controller='package',
+                                                                action='resource_read',
+                                                                id=pkg_id,
+                                                                resource_id=res['id'],
+                                                                qualified = True)
                         log.debug('Register:' + res_link)
 
             elif orig_data_dict.get('state', 'active') == 'active' and orig_data_dict.get('private', False):
