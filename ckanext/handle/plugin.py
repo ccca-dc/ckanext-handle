@@ -107,10 +107,10 @@ class HandlePlugin(plugins.SingletonPlugin):
         #log.debug(pprint.pprint(data_dict))
         hdl = HandleService()
 
-        author_name = data_dict['package'].get('author_citation', '')
+        author_name = data_dict['package'].get('citation_info', '')
 	if not author_name:
             author_name = 'Author name'
-        publication_year = data_dict['package'].get('pubDate', '')
+        publication_year = data_dict['package'].get('iso_creaDate', '')
 	if not publication_year:
             publication_year = "Publication year"
         else:
