@@ -163,7 +163,7 @@ class HandlePlugin(plugins.SingletonPlugin):
             if orig_data_dict.get('state', 'active') == 'active' and not orig_data_dict.get('private', False):
                 for res in resources:
                     #res = toolkit.get_action('resource_update')(context, res)
-                    res_pid = res.pop(hdl.resource_field, None)
+                    res_pid = res.get(hdl.resource_field, '')
 
                     # Is there no res_pid -> Create new res_pid
                     # Needed, because validator does not have Resource UUID at first run
@@ -192,7 +192,7 @@ class HandlePlugin(plugins.SingletonPlugin):
                 # Not active or private Dataset (delete the handle PID) if it
                 # exists
                 for res in resources:
-                    res_pid = res.pop(hdl.resource_field, None)
+                    res_pid = res.get(hdl.resource_field, '')
 
                     # Is there no res_pid -> Create new res_pid
                     # Needed, because validator does not have Resource UUID at first run
