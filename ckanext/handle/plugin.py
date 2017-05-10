@@ -120,7 +120,8 @@ class HandlePlugin(plugins.SingletonPlugin):
             publication_year = h.date_str_to_datetime(publication_year).year
 
         res_name = data_dict['resource'].get('name', '')
-        ver_number = data_dict['resource'].get('formatVer', '1')
+        res_id = toolkit.get_or_bust(data_dict['resource'],'id')
+        ver_number = toolkit.get_action('resource_version_number')(context, {'id':res_id})
         res_pid = data_dict['resource'].get(hdl.resource_field, '')
         access_date =  datetime.datetime.now()
 
