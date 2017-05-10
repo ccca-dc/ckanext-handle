@@ -1,9 +1,11 @@
 {% extends "dataviewer/base.html" %}
 
 {% block page %}
-    <h2> Cite this resource: </h2>
-    <p>Using this data set or resource, you should cite this data set according to the given copyright conditions with following citation rules. </p>
-    <blockquote>
-    <p>{{ author_name }}. ({{ publication_year }}). {{ res_name }} (Ver. {{ ver_number }}). Retrieved from CCCA Data Centre: <a href="{{ res_pid }}">{{ res_pid }}</a>. Access Date: {{ h.render_datetime(access_date) }} </p>
-    </blockquote>
+  <h2> Cite this resource: </h2>
+  <div class="panel panel-default">
+    <div class="panel-heading">Using this data set or resource, you should cite this data set according to the given copyright conditions with following citation rules.</div>
+    <div class="panel-body">
+    {{ author_name }}. ({{ publication_year }}). {{ res_name }} (Ver. {{ ver_number }}). Retrieved from CCCA Data Centre: <a href="{{ res_pid }}">{{ res_pid }}</a>. Access Date: {{ h.render_datetime(access_date) }}
+    </div>
+  </div>
 {% endblock %}
