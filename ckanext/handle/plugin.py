@@ -108,10 +108,10 @@ class HandlePlugin(plugins.SingletonPlugin):
         hdl = HandleService()
 
         author_name = data_dict['package'].get('citation_info', '')
-	if not author_name:
+        if not author_name:
             author_name = 'Author name'
-        publication_year = data_dict['package'].get('iso_creaDate', '')
-	if not publication_year:
+            publication_year = data_dict['package'].get('iso_creaDate', '')
+        if not publication_year:
             publication_year = "Publication year"
         else:
             publication_year = h.date_str_to_datetime(publication_year).year
@@ -130,7 +130,6 @@ class HandlePlugin(plugins.SingletonPlugin):
         }
 
         return tpl_variables
-
 
     ## IResourceController ---------------------------------------------------------------
     def after_create(self, context, data_dict):
@@ -197,7 +196,7 @@ class HandlePlugin(plugins.SingletonPlugin):
                     # Is there no res_pid -> Create new res_pid
                     # Needed, because validator does not have Resource UUID at first run
                     if not res_pid:
-	                res_pid = hdl.create_hdl_url(res['id'][:8])
+	                    res_pid = hdl.create_hdl_url(res['id'][:8])
                     #log.debug('Delete:' + res[hdl.resource_field])
                     if not hdl.development:
                         if hdl.hdl_exists_from_url(res_pid):
