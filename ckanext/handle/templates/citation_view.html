@@ -4,7 +4,6 @@
 {% block page %}
 {% resource 'handle/citation_view.css' %}
 {% resource 'handle/citation_view.js' %}
-  <button id="copy-button" class="btn" data-module="citation_view">Copy Text</button> 
   <h2> Cite this resource: </h2>
   <div class="panel panel-default">
     <div class="panel-heading">Using this data set or resource, you should cite this data set according to the given copyright conditions with following citation rules:</div>
@@ -12,6 +11,7 @@
     {{ author_name }}. {{ publication_year }}. {{ res_name }}, Version {{ ver_number }}. [indicate subset used]. Vienna, Austria. CCCA Data Centre. PID: <a href="{{ res_pid }}">{{ res_pid }}</a>. [{{ h.render_datetime(access_date) }}]
     </div>
   </div>
+  <button id="copy-button" class="btn" data-module="citation_view">Copy Text</button> 
 
   <div class="well">
   <h3>Additional information for citation:</h3>

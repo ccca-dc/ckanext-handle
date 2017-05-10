@@ -39,3 +39,8 @@
 
 .panel-primary .panel-heading {
   color: #ffffff;
+}
+
+#copy-button {
+  margin-bottom: 40px;
+}
