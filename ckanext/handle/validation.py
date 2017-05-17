@@ -14,4 +14,4 @@ def handle_pid_validator(key, data, errors, context):
 
     if (not value or value is missing) and resource_id:
         hdl = HandleService()
-        data[key]=hdl.create_hdl_url(resource_id.encode('utf-8')[:8])
+        data[key]=hdl.create_hdl_url(resource_id.encode('utf-8'))

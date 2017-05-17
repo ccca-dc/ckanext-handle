@@ -207,4 +207,4 @@ class HandlePlugin(plugins.SingletonPlugin):
                         if hdl.hdl_exists_from_url(res_pid):
                             hdl.delete_hdl_url(res_pid)
                     else:
-                        log.debug('Delete:' + res[hdl.resource_field])
+                        log.debug('Delete:' + res.get(hdl.resource_field,''))
