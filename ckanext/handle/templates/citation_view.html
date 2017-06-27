@@ -8,18 +8,19 @@
   <div class="panel panel-default">
     <div class="panel-heading">Using this data set or resource, you should cite this data set according to the given copyright conditions with following citation rules:</div>
     <div id="citation-text" class="panel-body">
-    {{ author_name }}. {{ publication_year }}. {{ res_name }}, Version {{ ver_number }}. [indicate subset used]. Vienna, Austria. CCCA Data Centre. PID: <a href="{{ res_pid }}">{{ res_pid }}</a>. [{{ h.render_datetime(access_date) }}]
+    {{ author_name }}. {{ publication_year }}. {{ res_name }}, Version {{ ver_number }}. {% if resource.subset_of is defined and resource.subset_of != "" %}[indicate subset used].{% endif %} Vienna, Austria. CCCA Data Centre. PID: <a href="{{ res_pid }}">{{ res_pid }}</a>. [{{ h.render_datetime(access_date) }}]
     </div>
   </div>
-  <button id="copy-button" class="btn" data-module="citation_view">Copy Text</button> 
+  <button id="copy-button" class="btn" data-module="citation_view">Copy Text</button>
 
   <div class="well">
   <h3>Additional information for citation:</h3>
-    <h4>[indicate subset used]:</h4> 
-        This field is for temporal or spatial coverage of the data used. It is necessary to enable a micro-citation or the ability to refer to the specific data used—the exact files, granules, records, etc. <br> 
+    {% if resource.subset_of is defined and resource.subset_of != "" %}
+    <h4>[indicate subset used]:</h4>
+        This field is for temporal or spatial coverage of the data used. It is necessary to enable a micro-citation or the ability to refer to the specific data used—the exact files, granules, records, etc. <br>
         For example, March to June 2004, or 84°N, 75°W; 44°N, 10°W.
-
-    <h4>PID:</h4> 
+    {% endif %}
+    <h4>PID:</h4>
         Use the complete PID URL when adding a Handle PID to the citation. <br>
         For example: https://hdl.handle.net/20.500.11756/0ce40066-36ad-4721-892f-c06621d8d1ff
   </div>
