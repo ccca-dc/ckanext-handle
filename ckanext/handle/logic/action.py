@@ -1,4 +1,4 @@
-# encoding: utf-8
+# -*- coding: utf-8 -*-
 
 import os
 import json
@@ -20,7 +20,8 @@ ValidationError = logic.ValidationError
 
 @ckan.logic.side_effect_free
 def package_add_persistent_identifier(context, data_dict):
-    '''If necessary, create a persistent handle identifier and add it to dataset metadata
+    '''Check status of the dataset to determine, if necessary,
+       create a persistent handle identifier and add it to dataset metadata
     :param: the id of the dataset
     :type id: string
     :rtype: dict
@@ -40,10 +41,10 @@ def package_add_persistent_identifier(context, data_dict):
         # it to the package metadata
         pkg_pid = orig_data_dict.get(hdl.package_field, None)
 
-        # Is there no pkg_pid -> Create new pkg_pid
+        # There is no pkg_pid -> Create new pkg_pid
         if not pkg_pid:
             pkg_pid = hdl.create_hdl_url(orig_data_dict['id'][:8])
-            #toolkit.get_action('resource_update')(context,orig_res)
+
 
         # If we don't have a registered handle, register res_pid
         if not hdl.development:
@@ -53,12 +54,21 @@ def package_add_persistent_identifier(context, data_dict):
                                                         id=pkg_id,
                                                         qualified = True)
                 hdl.register_hdl_url(pkg_pid, pkg_link)
+                orig_data_dict[hdl.package_field] = pkg_pid
+                # Maybe this won't work because we call this api action in after_update (recursive)
+                tk.call_action('package_update')(context, orig_data_dict)
         else:
             pkg_link = h.url_for_static_or_external(controller='package',
                                                     action='read',
                                                     id=pkg_id,
                                                     qualified = True)
+
+            orig_data_dict[hdl.package_field] = pkg_pid
+            # Maybe this won't work because we call this api action in after_update (recursive)
+            tk.call_action('package_update')(context, orig_data_dict)
+
             log.debug('Register:' + pkg_link)
+
 
     elif orig_data_dict.get('state', None) == 'active' or orig_data_dict.get('private', True):
         # Not active or private Dataset raise NotAuthorized
