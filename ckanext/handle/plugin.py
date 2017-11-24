@@ -150,4 +150,5 @@ class HandlePlugin(plugins.SingletonPlugin):
         @param pkg_dict:
         @return: pkg_dict
         """
-        tk.call_action('package_add_persistent_identifier')(context, data_dict)
+        log.debug("after_update")
+        tk.get_action('package_add_persistent_identifier')(context, data_dict)
