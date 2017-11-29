@@ -24,7 +24,6 @@ class HandlePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IConfigurable)
     plugins.implements(plugins.IActions)
-    plugins.implements(plugins.IValidators, inherit=True)
     plugins.implements(plugins.IResourceView, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
 
@@ -83,10 +82,6 @@ class HandlePlugin(plugins.SingletonPlugin):
     def get_actions(self):
         actions = {'package_add_persistent_identifier': action.package_add_persistent_identifier}
         return actions
-
-    ## IValidators
-    def get_validators(self):
-       return {'valid_handle_pid': handle_pid_validator}
 
     ## IResourceView
     def info(self):
@@ -150,5 +145,4 @@ class HandlePlugin(plugins.SingletonPlugin):
         @param pkg_dict:
         @return: pkg_dict
         """
-        log.debug("after_update")
         tk.get_action('package_add_persistent_identifier')(context, data_dict)
