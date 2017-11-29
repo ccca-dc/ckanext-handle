@@ -22,16 +22,14 @@ NotFound = logic.NotFound
 ValidationError = logic.ValidationError
 
 
-
 @ckan.logic.side_effect_free
 def package_add_persistent_identifier(context, data_dict):
-    '''Check status of the dataset to determine, if necessary,
-       create a persistent handle identifier and add it to dataset metadata
+    '''Check status of the dataset to determine, if it is necessary to
+       create a persistent handle identifier and add it to dataset metadata.
     :param: the id of the dataset
     :type id: string
     :rtype: dict
     '''
-    import pprint
 
     tk.check_access('package_update', context, {'id': data_dict.get('id', None)})
     orig_data_dict = tk.get_action('package_show')(context, data_dict)
@@ -40,8 +38,8 @@ def package_add_persistent_identifier(context, data_dict):
     if orig_data_dict.get('state', None) == 'active' and not orig_data_dict.get('private', False):
         hdl = HandleService()
 
-        # If there is a pid available in the package metadata, check if it is registered within the handle service
-        # If the pid is not registered do it now
+        # If there is a pid available in the package metadata, check if it is registered 
+        # within the handle service. If the pid is not registered do it now
 
         # When there is no pid available in package metadata, create one within the handle service and add
         # it to the package metadata
@@ -60,7 +58,7 @@ def package_add_persistent_identifier(context, data_dict):
                                                         qualified = True)
                 hdl.register_hdl_url(pkg_pid, pkg_link)
                 orig_data_dict[hdl.package_field] = pkg_pid
-                # Maybe this won't work because we call this api action in after_update (recursive)
+                # package_update in after_update, but only once no endless loop
                 tk.get_action('package_update')(context, orig_data_dict)
         elif hdl.development and not pkg_pid:
             # There is no pkg_pid -> Create new pkg_pid
@@ -73,15 +71,14 @@ def package_add_persistent_identifier(context, data_dict):
 
             orig_data_dict[hdl.package_field] = pkg_pid
             # Maybe this won't work because we call this api action in after_update (recursive)
-            pprint.pprint(orig_data_dict)
             log.debug('Register:' + pkg_link)
             tk.get_action('package_update')(context, orig_data_dict)
 
 
 
     elif orig_data_dict.get('state', None) not in 'active' or orig_data_dict.get('private', True):
-        # Not active or private Dataset raise NotAuthorized
-        raise NotAuthorized('The dataset is not active or private. No pid was created.')
+        # Not active or private Dataset
+        pass
 
 
 def delete_persistent_identifier(context, data_dict):
