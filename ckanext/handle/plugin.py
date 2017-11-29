@@ -6,7 +6,6 @@ from logging import getLogger
 
 import ckanext.handle.logic.action as action
 from ckanext.handle.lib import HandleService
-from ckanext.handle.validation import handle_pid_validator
 import ckanext.handle.commands.handle as handle_action
 import datetime
 
