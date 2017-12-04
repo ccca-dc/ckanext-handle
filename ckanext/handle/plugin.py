@@ -4,39 +4,36 @@ import ckan.lib.helpers as h
 
 from logging import getLogger
 
-import ckanext.handle.logic.action as action
 from ckanext.handle.lib import HandleService
-import ckanext.handle.commands.handle as handle_action
 import datetime
 
 config = {}
-
-import pprint
-
 log = getLogger(__name__)
 
 
 class ConfigError(Exception):
     pass
 
+
 class HandlePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IConfigurable)
     plugins.implements(plugins.IActions)
-    plugins.implements(plugins.IResourceView, inherit=True)
+    plugins.implements(plugins.IAuthFunctions, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
+    plugins.implements(plugins.IResourceView, inherit=True)
 
-    ## IConfigurer
+    # IConfigurer
     def update_config(self, config_):
         tk.add_template_directory(config_, 'templates')
         tk.add_public_directory(config_, 'public')
         tk.add_resource('fanstatic', 'handle')
 
-
-    ## IConfigurable
+    # IConfigurable
     def configure(self, main_config):
         """Implementation of IConfigurable.configure"""
-        # Our own config schema, defines required items, default values and transform functions
+        # Our own config schema, defines required items, default values and
+        # transform functions
         schema = {
             'ckanext.handle.handle_server_url': {'required': True},
             'ckanext.handle.private_key': {'required': True},
@@ -70,8 +67,7 @@ class HandlePlugin(plugins.SingletonPlugin):
             elif schema[i].get('required', False):
                 errors.append('Configuration parameter {} is required'.format(i))
             elif schema[i].get('required_if', False) and schema[i]['required_if'] in config:
-                errors.append('Configuration parameter {} is required when {} is present'.format(i,
-                    schema[i]['required_if']))
+                errors.append('Configuration parameter {} is required when {} is present'.format(i, schema[i]['required_if']))
             elif 'default' in schema[i]:
                 config[i] = schema[i]['default']
         if len(errors):
@@ -79,10 +75,28 @@ class HandlePlugin(plugins.SingletonPlugin):
 
     # IActions
     def get_actions(self):
-        actions = {'package_add_persistent_identifier': action.package_add_persistent_identifier}
-        return actions
+        import ckanext.handle.logic.action as action
+        return {'package_add_persistent_identifier': action.package_add_persistent_identifier,
+                'delete_persistent_identifier': action.delete_persistent_identifier}
 
-    ## IResourceView
+    # IAuthFunctions
+    def get_auth_functions(self):
+        import ckanext.handle.logic.auth as auth
+        return {'delete_persistent_identifier':
+                auth.delete_persistent_identifier}
+
+    # IPackageController
+    def after_update(self, context, data_dict):
+        """
+        Dataset has been created / updated
+        Check status of the dataset to determine if we should publish HANDLE
+        PIDS to datacite network
+        @param pkg_dict:
+        @return: pkg_dict
+        """
+        tk.get_action('package_add_persistent_identifier')(context, data_dict)
+
+    # IResourceView
     def info(self):
         return {'name': 'citation_view',
                 'title': tk._('Citation'),
@@ -102,7 +116,7 @@ class HandlePlugin(plugins.SingletonPlugin):
 
     def setup_template_variables(self, context, data_dict):
         """Setup variables available to templates"""
-        #log.debug(pprint.pprint(data_dict))
+        # log.debug(pprint.pprint(data_dict))
         hdl = HandleService()
 
         # Author name
@@ -118,10 +132,10 @@ class HandlePlugin(plugins.SingletonPlugin):
             publication_year = h.date_str_to_datetime(publication_year).year
 
         res_name = data_dict['resource'].get('name', '')
-        res_id = tk.get_or_bust(data_dict['resource'],'id')
-        ver_number = tk.get_action('resource_version_number')(context, {'id':res_id})
+        res_id = tk.get_or_bust(data_dict['resource'], 'id')
+        ver_number = tk.get_action('resource_version_number')(context, {'id': res_id})
         res_pid = data_dict['resource'].get(hdl.resource_field, '')
-        access_date =  datetime.datetime.now()
+        access_date = datetime.datetime.now()
 
         tpl_variables = {
             'author_name': author_name,
@@ -133,15 +147,3 @@ class HandlePlugin(plugins.SingletonPlugin):
         }
 
         return tpl_variables
-
-
-    ## IPackageController
-    def after_update(self, context, data_dict):
-        """
-        Dataset has been created / updated
-        Check status of the dataset to determine if we should publish HANDLE
-        PIDS to datacite network
-        @param pkg_dict:
-        @return: pkg_dict
-        """
-        tk.get_action('package_add_persistent_identifier')(context, data_dict)
