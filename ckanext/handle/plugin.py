@@ -76,8 +76,9 @@ class HandlePlugin(plugins.SingletonPlugin):
     # IActions
     def get_actions(self):
         import ckanext.handle.logic.action as action
-        return {'package_add_persistent_identifier': action.package_add_persistent_identifier,
-                'delete_persistent_identifier': action.delete_persistent_identifier}
+        return {'create_persistent_identifier': action.create_persistent_identifier,
+                'delete_persistent_identifier': action.delete_persistent_identifier,
+                'update_persistent_identifier': action.update_persistent_identifier}
 
     # IAuthFunctions
     def get_auth_functions(self):
@@ -94,7 +95,7 @@ class HandlePlugin(plugins.SingletonPlugin):
         @param pkg_dict:
         @return: pkg_dict
         """
-        tk.get_action('package_add_persistent_identifier')(context, data_dict)
+        tk.get_action('create_persistent_identifier')(context, data_dict)
 
     # IResourceView
     def info(self):
