@@ -20,6 +20,7 @@ class HandlePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurable)
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IAuthFunctions, inherit=True)
+    plugins.implements(plugins.IValidators, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.IResourceView, inherit=True)
 
@@ -76,15 +77,30 @@ class HandlePlugin(plugins.SingletonPlugin):
     # IActions
     def get_actions(self):
         import ckanext.handle.logic.action as action
-        return {'create_persistent_identifier': action.create_persistent_identifier,
-                'delete_persistent_identifier': action.delete_persistent_identifier,
-                'update_persistent_identifier': action.update_persistent_identifier}
+        return {
+            'auto_create_persistent_identifier': action.auto_create_persistent_identifier,
+            'create_persistent_identifier': action.create_persistent_identifier,
+            'register_persistent_identifier': action.register_persistent_identifier,
+            'update_persistent_identifier': action.update_persistent_identifier,
+            'delete_persistent_identifier': action.delete_persistent_identifier
+        }
 
     # IAuthFunctions
     def get_auth_functions(self):
         import ckanext.handle.logic.auth as auth
-        return {'delete_persistent_identifier':
-                auth.delete_persistent_identifier}
+        return {
+            'create_persistent_identifier': auth.create_persistent_identifier,
+            'register_persistent_identifier': auth.register_persistent_identifier,
+            'delete_persistent_identifier': auth.delete_persistent_identifier,
+            'update_persistent_identifier': auth.update_persistent_identifier
+        }
+
+    ## IValidators
+    def get_validators(self):
+        import ckanext.handle.validators as validators
+        return {
+            'ignore_not_empty': validators.ignore_not_empty,
+        }
 
     # IPackageController
     def after_update(self, context, data_dict):
@@ -95,7 +111,7 @@ class HandlePlugin(plugins.SingletonPlugin):
         @param pkg_dict:
         @return: pkg_dict
         """
-        tk.get_action('create_persistent_identifier')(context, data_dict)
+        tk.get_action('auto_create_persistent_identifier')(context, data_dict)
 
     # IResourceView
     def info(self):

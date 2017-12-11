@@ -14,17 +14,13 @@ from ckanext.handle.lib import HandleService
 from logging import getLogger
 log = getLogger(__name__)
 
-check_access = logic.check_access
-
-_get_or_bust = logic.get_or_bust
-
 NotAuthorized = logic.NotAuthorized
 NotFound = logic.NotFound
 ValidationError = logic.ValidationError
 
 
 @ckan.logic.side_effect_free
-def create_persistent_identifier(context, data_dict):
+def auto_create_persistent_identifier(context, data_dict):
     """Check status of the dataset to determine, if it is necessary to
        create persistent handle identifiers (including resource) and add
        it to dataset metadata.
@@ -57,7 +53,7 @@ def create_persistent_identifier(context, data_dict):
 
 def _package_persistent_identifier(data_dict):
     """If it is necessary, create a persistent handle identifier
-       and add it to resource metadata.
+       and add it to package metadata.
 
     :param data_dict: The full package dictionary
     :type id: string
@@ -76,7 +72,7 @@ def _package_persistent_identifier(data_dict):
         # Create Link for package
         pkg_link = h.url_for_static_or_external(controller='package',
                                                 action='read',
-                                                id=orig_data_dict.get('id'),
+                                                id=data_dict.get('id'),
                                                 qualified=True)
         # Register package link
         hdl.register_hdl_url(pkg_pid, pkg_link)
@@ -92,7 +88,6 @@ def _resource_persistent_identifier(data_dict):
     :rtype: list of dicts
     """
     hdl = HandleService()
-    new_res = []
 
     for res in data_dict.get('resources', None):
         res_pid = res.get(hdl.resource_field, None)
@@ -114,20 +109,40 @@ def _resource_persistent_identifier(data_dict):
 
 
 @ckan.logic.side_effect_free
-def delete_persistent_identifier(context, data_dict):
-    """Deletes the persistent identifier (only sysadmins)
+def create_persistent_identifier(context, data_dict):
+    """Creates a unique persistent identifier without registering it
 
-    :param hdl_url: A handle url e.g.: https://hdl.handle.net/20.500.11756/15aa58d5
-    :type hdl_url: string
+    :param location: The new URL for this hdl pid
+    :type location: string
     :returns:
     :raises: KeyError
     """
-    tk.check_access('delete_persistent_identifier')
+    tk.check_access('create_persistent_identifier', context)
     hdl = HandleService()
     try:
-        hdl.delete_hdl_url(data_dict['hdl_url'])
+        return hdl.create_unique_hdl_url()
+    except:
+        raise ValidationError('Something went wrong. Inspect your handle service')
+
+
+@ckan.logic.side_effect_free
+def register_persistent_identifier(context, data_dict):
+    """Registers a persistent identifier
+
+    :param hdl_url: A handle url e.g.: https://hdl.handle.net/20.500.11756/15aa58d5
+    :type hdl_url: string
+    :param location: The new URL for this hdl pid
+    :type location: string
+    :returns: bool -- the success code
+    """
+    tk.check_access('register_persistent_identifier', context)
+    hdl = HandleService()
+    try:
+        return hdl.register_hdl_url(data_dict['hdl_url'], data_dict['location'])
     except KeyError:
-        ValidationError('Specifiy hdl_url in data_dict')
+        raise ValidationError('Specifiy hdl_url and location in data_dict')
+    except:
+        raise ValidationError('Could not register the persistent identifier')
 
 
 @ckan.logic.side_effect_free
@@ -139,9 +154,30 @@ def update_persistent_identifier(context, data_dict):
     :param location: The new URL for this hdl pid
     :type location: string
     """
-    # tk.check_access('update_persistent_identifier')
+    tk.check_access('update_persistent_identifier', context)
     hdl = HandleService()
     try:
-        hdl.update_hdl_url(data_dict['hdl_url'], data_dict['location'])
+        return hdl.update_hdl_url(data_dict['hdl_url'], data_dict['location'])
     except KeyError:
-        ValidationError('Specifiy hdl_url and location in data_dict')
+        raise ValidationError('Specifiy hdl_url and location in data_dict')
+    except:
+        raise ValidationError('Something went wrong. Inspect your handle service')
+
+
+@ckan.logic.side_effect_free
+def delete_persistent_identifier(context, data_dict):
+    """Deletes the persistent identifier (only sysadmins)
+
+    :param hdl_url: A handle url e.g.: https://hdl.handle.net/20.500.11756/15aa58d5
+    :type hdl_url: string
+    :returns:
+    :raises: KeyError
+    """
+    tk.check_access('delete_persistent_identifier', context)
+    hdl = HandleService()
+    try:
+        return hdl.delete_hdl_url(data_dict['hdl_url'])
+    except KeyError:
+        raise ValidationError('Specifiy hdl_url in data_dict')
+    except:
+        raise ValidationError('Something went wrong. Inspect your handle service')
