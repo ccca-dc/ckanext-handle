@@ -44,6 +44,7 @@ def auto_create_persistent_identifier(context, data_dict):
         # Some pids changed -> Update package
         if orig_data_dict != pid_data_dict:
             # package_update in after_update
+            pid_data_dict['create_version'] = False
             tk.get_action('package_update')(context, pid_data_dict)
 
     elif orig_data_dict.get('state', None) not in 'active' or orig_data_dict.get('private', True):
