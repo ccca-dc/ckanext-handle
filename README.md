@@ -3,15 +3,17 @@ ckanext-handle
 ============
 
 The ckan plugin ckanext-handle adds the possibility to interact with a handle
-service. Creation, deletion and search of handle records. The plugin creates a
-handle record for every resource only if the resource is active and public. It
-deletes the handle record if the resources status is set to private.
-
-The plugin offers a ckan validator and a scheming preset for the creation of a
-handle record when the resource is created within ckan.
+service (https://www.handle.net/). It enables sysadmins to create, register,
+update and delete handle records via the ckan API. The plugin automatically
+creates a handle record for every dataset and all resources but only if the
+resource is active and public.
 
 Additionally the plugin provides a view-plugin citation_view which adds a
 citation page for a resource.
+
+There is the possibility to run ckanext-handle in a development mode without
+connecting to the handle server. When a handle pid has to be registered, there
+are debug logs instead the handle server interaction.
 
 Requirements
 ----------------
@@ -54,16 +56,14 @@ Config Settings
 
 These are the config settings for ckanext-handle:
 
-    # The minimum number of hours to wait before re-checking a resource
-    # (optional, default: 24).
     Required:
     ckanext.handle.handle_server_url = https://hdl.ccca.ac.at:8000
     ckanext.handle.private_key = path_to_privkey.pem
     ckanext.handle.certificate_only = path_to_certificate_only.pem
     ckanext.handle.prefix = 20.500.XXXXX
     ckanext.handle.proxy = https://hdl.handle.net
-    ckanext.handle.resource_field = pid_resource
-    ckanext.handle.package_field =  pid_dataset
+    ckanext.handle.resource_field = uri
+    ckanext.handle.package_field = uri
 
     Optional: 
     If development is true no server interaction takes place, all

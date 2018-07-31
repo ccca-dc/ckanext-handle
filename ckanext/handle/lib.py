@@ -1,6 +1,7 @@
 import os
 import logging
 import urlparse
+import uuid
 import ckan.plugins as p
 from pylons import config
 
@@ -30,7 +31,15 @@ class HandleService:
             self.client = EUDATHandleClient.instantiate_with_credentials(self.cred)
 
 
-    def create_hdl_url(self, hdl_id):
+    def create_unique_hdl_url(self):
+        while True:
+            hdl_id = str(uuid.uuid4())
+            hdl_url = self._create_hdl_url(hdl_id[:8])
+            if not self.hdl_exists_from_url(hdl_url) or self.development:
+                return hdl_url
+
+
+    def _create_hdl_url(self, hdl_id):
         """
         Create a unique identifier, using the prefix and the id:
         eg. 20.500.11756/15aa58d5-2405-4e0e-ad1b-ad9776e9733f
@@ -49,23 +58,44 @@ class HandleService:
     def register_hdl_url(self, hdl_url, location):
         """
         Register a handle url:
-        eg. https://hdl.handle.net/20.500.11756/15aa58d5-2405-4e0e-ad1b-ad9776e9733f
+        eg. https://hdl.handle.net/20.500.11756/15aa58d5
         @param hdl_url: A handle URL
         @return: handle
         """
-        handle = self.client.register_handle(self._hdl_url_to_hdl_id(hdl_url),location)
-        return handle
+        if self.development:
+            log.debug('Register Handle: ' + hdl_url)
+            return False
+        else:
+            handle = self.client.register_handle(self._hdl_url_to_hdl_id(hdl_url),location)
+            return handle
+
+    def update_hdl_url(self, hdl_url, location):
+        """
+        Register a handle url:
+        eg. https://hdl.handle.net/20.500.11756/15aa58d5
+        @param hdl_url: A handle URL
+        @return: handle
+        """
+        if self.development:
+            log.debug('Update Handle ' + hdl_url + ' with location '+ location)
+            return False
+        else:
+            handle = self.client.modify_handle_value(self._hdl_url_to_hdl_id(hdl_url), URL=location)
+            return handle
 
     def delete_hdl_url(self, hdl_url):
         """
         Delete a handle url:
-        eg. https://hdl.handle.net/20.500.11756/15aa58d5-2405-4e0e-ad1b-ad9776e9733f
+        eg. https://hdl.handle.net/20.500.11756/15aa58d5
         @param hdl_url: A handle URL
         @return:
         """
-        #log.debug(self._hdl_url_to_hdl_id(hdl_url))
-        ret = self.client.delete_handle(self._hdl_url_to_hdl_id(hdl_url))
-        return ret
+        if self.development:
+            log.debug('Delete Handle: ' + hdl_url)
+            return False
+        else:
+            ret = self.client.delete_handle(self._hdl_url_to_hdl_id(hdl_url))
+            return ret
 
     def get_hdl_record_from_url(self, hdl_url):
         """
@@ -82,11 +112,18 @@ class HandleService:
         @param hdl_url: A handle URL
         @return: boolean
         """
-        check_hdl_exists = None
-        if (self.client.retrieve_handle_record(self._hdl_url_to_hdl_id(hdl_url)) == None):
-            check_hdl_exists = False
+        if self.development:
+            if not hdl_url:
+                check_hdl_exists = False
+            else:
+                check_hdl_exists = True
         else:
-            check_hdl_exists = True
+            if not hdl_url:
+                check_hdl_exists = False
+            elif (self.client.retrieve_handle_record(self._hdl_url_to_hdl_id(hdl_url)) == None):
+                check_hdl_exists = False
+            else:
+                check_hdl_exists = True
 
         return check_hdl_exists
 
