@@ -161,8 +161,8 @@ def update_persistent_identifier(context, data_dict):
         return hdl.update_hdl_url(data_dict['hdl_url'], data_dict['location'])
     except KeyError:
         raise ValidationError('Specifiy hdl_url and location in data_dict')
-    except:
-        raise ValidationError('Something went wrong. Inspect your handle service')
+    except Exception as e:
+        raise ValidationError(e.message, e.args)
 
 
 @ckan.logic.side_effect_free
